@@ -21,6 +21,11 @@ const productSchema = new Schema({
     url:{
         type: Array,
         required: true
+    },
+    valid:{
+        type: Boolean,
+        default: true,
+        required: false
     }
 })
 
@@ -33,6 +38,7 @@ const validateProduct = (body)=>{
         desc: Joi.string().required(),
         price: Joi.number().required(),
         url: Joi.array().required(),
+        valid: Joi.boolean(),
     })
     return schema.validate(body)
 }
