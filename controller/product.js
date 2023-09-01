@@ -4,7 +4,8 @@ const cloudinary = require("../cloudinary");
 
 exports.getProducts = async(req, res)=>{
     try{
-        const products = await Products.find()
+        const {category} = req.query
+        const products = await Products.find(category ? {category} : null).sort({ _id: -1 })
         res.status(200).json({variant: "sucess", msg:"all blogs", innerData: products})
     }
     catch{
