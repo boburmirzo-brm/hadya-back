@@ -47,6 +47,7 @@ exports.createSignIn = async (req, res) => {
             if (retults) {
 
                 const token = jwt.sign({ _id: exitUser._id, username: exitUser.username, isAdmin: false }, process.env.privateKey)
+                exitUser.password = null
                 res.status(200).json({ variant: "success", msg: "welcome", innerData: { user: exitUser, token } })
             } else {
                 res.status(400).json({ variant: "warning", msg: "password is  incorrect", innerData: null });
