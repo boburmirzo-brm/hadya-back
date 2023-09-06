@@ -4,10 +4,10 @@ const cloudinary = require("../cloudinary");
 
 exports.getProducts = async (req, res) => {
   try {
-    const { category } = req.query;
-    const products = await Products.find(category ? { category } : null).sort({
+    const { category, valid } = req.query;
+    const products = await Products.find(category ? { category, valid: Boolean(valid) } : valid ? {valid: Boolean(valid)}: null ).sort({
       _id: -1,
-    });
+    }); 
     res
       .status(200)
       .json({ variant: "sucess", msg: "all blogs", innerData: products });
