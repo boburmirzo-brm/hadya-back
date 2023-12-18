@@ -31,7 +31,7 @@ exports.createProduct = async (req, res) => {
   let url = [];
   for (const file of req.files) {
     const processedImage = sharp(file.buffer)
-      .resize(600, 600) 
+      .resize(1000, 1000) 
       .toBuffer();
 
     const { originalname } = file;
