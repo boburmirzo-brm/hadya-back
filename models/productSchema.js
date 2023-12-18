@@ -12,7 +12,7 @@ const productSchema = new Schema({
     },
     desc: {
         type: String,
-        required: true
+        required: false
     },
     price: {
         type: Number,
@@ -21,6 +21,10 @@ const productSchema = new Schema({
     url:{
         type: Array,
         required: true
+    },
+    items:{
+        type: Array,
+        required: false
     },
     valid:{
         type: Boolean,
@@ -35,9 +39,10 @@ const validateProduct = (body)=>{
     const schema = Joi.object({
         name: Joi.string().required(),
         category: Joi.string().required(),
-        desc: Joi.string().required(),
+        desc: Joi.string(),
         price: Joi.number().required(),
         url: Joi.array().required(),
+        items: Joi.array(),
         valid: Joi.boolean(),
     })
     return schema.validate(body)

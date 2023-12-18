@@ -4,8 +4,9 @@ const {
   createProduct,
   getProducts,
   updateProductValid,
+  deleteProduct
 } = require("../controller/product");
-const { upload } = require("../middleware/uploader");
+// const { upload } = require("../middleware/uploader");
 const {
   getUsers,
   createSignIn,
@@ -13,11 +14,16 @@ const {
   deleteUser,
   putUser,
 } = require("../controller/user");
+const multer = require("multer");
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 //product point
 router.get("/get/products", getProducts);
 router.post("/create/product", upload.array("rasmlar"), createProduct);
-router.put("/update/product/:productId", updateProductValid);
+router.patch("/update/product/:productId", updateProductValid);
+router.delete("/delete/product/:productId", deleteProduct);
 //user point
 router.get("/get/users", getUsers);
 router.post("/create/sign-in", createSignIn);

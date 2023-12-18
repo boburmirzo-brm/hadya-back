@@ -1,13 +1,20 @@
 const { Products, validateProduct } = require("../models/productSchema");
 const fs = require("fs");
 const cloudinary = require("../cloudinary");
+const sharp = require("sharp");
 
 exports.getProducts = async (req, res) => {
   try {
     const { category, valid } = req.query;
-    const products = await Products.find(category ? { category, valid: Boolean(valid) } : valid ? {valid: Boolean(valid)}: null ).sort({
+    const products = await Products.find(
+      category
+        ? { category, valid: Boolean(valid) }
+        : valid
+        ? { valid: Boolean(valid) }
+        : null
+    ).sort({
       _id: -1,
-    }); 
+    });
     res
       .status(200)
       .json({ variant: "sucess", msg: "all blogs", innerData: products });
@@ -20,25 +27,42 @@ exports.getProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const uploader = async (path) => await cloudinary.uploads(path, "photos");
-    let url = [];
-    if (req.files) {
-      const files = req.files;
-      for (const file of files) {
-        const { path } = file;
-        const newPath = await uploader(path);
-        url.push(newPath);
-        fs.unlinkSync(path);
-      }
-    }
-    let { name, category, desc, price } = req.body;
+  // const uploader = async (path) => await cloudinary.uploads(path, "photos");
+  let url = [];
+  for (const file of req.files) {
+    const processedImage = sharp(file.buffer)
+      .resize(600, 600) 
+      .toBuffer();
 
-    let newFile = await Products.create({ name, category, desc, price, url });
-    res.status(201).json({
-      variant: "success",
-      msg: "file was saved",
-      innerData: newFile,
+    const { originalname } = file;
+    const unique = new Date().getTime();
+    const format = originalname?.split(".").pop();
+    const name = `product_${unique}.${format}`;
+
+    await processedImage.then((data) => {
+      sharp(data)
+        .toFile(`./images/${name}`)
+        .then(async () => {
+          let pathName = `${req.protocol}://${req.get("host")}/image/${name}`;
+          // let path = `images\\${name}`;
+          // const newPath = await uploader(path);
+          // fs.unlinkSync(path);
+          nextFunc(pathName, req.files.length)
+        });
     });
+  }
+  async function nextFunc(path, length){
+    url.push(path)
+    if(url.length === length){
+      let { name, category, desc, price, items } = req.body;
+      let newFile = await Products.create({ name, category, desc, price, url, items});
+      res.status(201).json({
+        variant: "success",
+        msg: "file was saved",
+        innerData: newFile,
+      });
+    }
+  }
   } catch {
     res
       .status(500)
@@ -69,6 +93,43 @@ exports.updateProductValid = async (req, res) => {
       variant: "success",
       msg: "Product updated successfully",
       innerData: updatedProduct,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      variant: "error",
+      msg: "Server error",
+      innerData: null,
+    });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const propduct = await Products.findById(productId);
+    console.log(propduct);
+    
+    propduct?.url?.forEach((el)=>{
+      let name = el.split("/").slice(-1)
+      let path = `images\\${name}`;
+      fs.unlinkSync(path);
+    })
+
+    const deleteProduct = await Products.findByIdAndRemove(productId);
+
+    if (!deleteProduct) {
+      return res.status(404).json({
+        variant: "error",
+        msg: "Product not found",
+        innerData: null,
+      });
+    }
+
+    res.status(200).json({
+      variant: "success",
+      msg: "Product deleted successfully",
+      innerData: deleteProduct,
     });
   } catch (error) {
     console.error(error);

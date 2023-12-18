@@ -16,6 +16,8 @@ app.get('/', async(req,res)=> {
 })
 
 app.use("/", require("./router"))
+app.use(express.urlencoded({ extended: true }));
+app.use("/image", express.static("images"));
 
 
 const PORT = process.env.PORT || 8000;
