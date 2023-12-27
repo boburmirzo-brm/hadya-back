@@ -23,7 +23,7 @@ const upload = multer({ storage });
 router.get("/get/products", getProducts);
 router.post("/create/product", upload.array("rasmlar"), createProduct);
 router.patch("/update/product/:productId", updateProductValid);
-router.delete("/delete/product/:productId", deleteProduct);
+router.patch("/delete/product/:productId", deleteProduct);
 //user point
 router.get("/get/users", getUsers);
 router.post("/create/sign-in", createSignIn);
