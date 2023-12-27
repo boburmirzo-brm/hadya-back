@@ -1,7 +1,7 @@
-const { Products, validateProduct } = require("../models/productSchema");
+const { Products } = require("../models/productSchema");
 const fs = require("fs");
-const cloudinary = require("../cloudinary");
 const sharp = require("sharp");
+const { v4: uuidv4 } = require("uuid");
 
 exports.getProducts = async (req, res) => {
   try {
@@ -27,42 +27,50 @@ exports.getProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-  // const uploader = async (path) => await cloudinary.uploads(path, "photos");
-  let url = [];
-  for (const file of req.files) {
-    const processedImage = sharp(file.buffer)
-      .resize(1000, 1000) 
-      .toBuffer();
+    // const uploader = async (path) => await cloudinary.uploads(path, "photos");
+    let url = [];
+    for (const file of req.files) {
+      const { originalname } = file;
+      const unique = uuidv4();
+      const format = originalname?.split(".").pop();
+      const name = `product_${unique}.${format}`;
 
-    const { originalname } = file;
-    const unique = new Date().getTime();
-    const format = originalname?.split(".").pop();
-    const name = `product_${unique}.${format}`;
-
-    await processedImage.then((data) => {
-      sharp(data)
-        .toFile(`./images/${name}`)
-        .then(async () => {
-          let pathName = `${req.protocol}://${req.get("host")}/image/${name}`;
-          // let path = `images\\${name}`;
-          // const newPath = await uploader(path);
-          // fs.unlinkSync(path);
-          nextFunc(pathName, req.files.length)
+      sharp(file.buffer)
+        .metadata()
+        .then(async (metadata) => {
+          let booleanValue =
+            metadata.orientation && [5, 6, 7, 8].includes(metadata.orientation);
+          const processedImage = sharp(file.buffer)
+            .rotate(booleanValue ? 90 : 0)
+            .resize(1000, 1000)
+            .toBuffer();
+          await processedImage.then((data) => {
+            sharp(data)
+              .toFile(`./images/${name}`)
+              .then(async () => {
+                let pathName = `${req.protocol}://${req.get(
+                  "host"
+                )}/image/${name}`;
+                // let path = `images\\${name}`;
+                // const newPath = await uploader(path);
+                // fs.unlinkSync(path);
+                nextFunc(pathName, req.files.length);
+              });
+          });
         });
-    });
-  }
-  async function nextFunc(path, length){
-    url.push(path)
-    if(url.length === length){
-      let { name, category, desc, price, items } = req.body;
-      let newFile = await Products.create({ name, category, desc, price, url, items});
-      res.status(201).json({
-        variant: "success",
-        msg: "file was saved",
-        innerData: newFile,
-      });
     }
-  }
+    async function nextFunc(path, length) {
+      url.push(path);
+      if (url.length === length) {
+        let { name, category, desc, price, items } = req.body;
+        let newFile = await Products.create({ name, category, desc, price, url, items});
+        res.status(201).json({
+          variant: "success",
+          msg: "file was saved",
+          innerData: newFile,
+        });
+      }
+    }
   } catch {
     res
       .status(500)
@@ -108,13 +116,12 @@ exports.deleteProduct = async (req, res) => {
   try {
     const { productId } = req.params;
     const propduct = await Products.findById(productId);
-    console.log(propduct);
-    
-    propduct?.url?.forEach((el)=>{
-      let name = el.split("/").slice(-1)
+
+    propduct?.url?.forEach((el) => {
+      let name = el.split("/").slice(-1);
       let path = `images\\${name}`;
       fs.unlinkSync(path);
-    })
+    });
 
     const deleteProduct = await Products.findByIdAndRemove(productId);
 
