@@ -2,6 +2,7 @@ const { Products } = require("../models/productSchema");
 const fs = require("fs");
 const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
+const path = require('path');
 
 exports.getProducts = async (req, res) => {
   try {
@@ -123,9 +124,12 @@ exports.deleteProduct = async (req, res) => {
     const propduct = await Products.findById(productId);
 
     propduct?.url?.forEach((el) => {
-      let name = el.split("/").slice(-1);
-      let path = `images\\${name}`;
-      fs.unlinkSync(path);
+      let name = el.split("/").slice(-1)[0];
+      // let path = `images\\${name}`;
+      // fs.unlinkSync(path);
+      const filePath = path.join('images', name);
+      console.log(filePath);
+      fs.unlinkSync(filePath);
     });
 
     const deleteProduct = await Products.findByIdAndRemove(productId);

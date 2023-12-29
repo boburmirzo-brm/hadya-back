@@ -18,17 +18,18 @@ const multer = require("multer");
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+const {auth} = require("../middleware/auth")
 
 //product point
-router.get("/get/products", getProducts);
-router.post("/create/product", upload.array("rasmlar"), createProduct);
-router.patch("/update/product/:productId", updateProductValid);
-router.patch("/delete/product/:productId", deleteProduct);
+router.get("/get/products",  getProducts);
+router.post("/create/product", [auth, upload.array("rasmlar")], createProduct);
+router.patch("/update/product/:productId",[auth],  updateProductValid);
+router.delete("/delete/product/:productId",[auth],  deleteProduct);
 //user point
-router.get("/get/users", getUsers);
+router.get("/get/users", [auth], getUsers);
 router.post("/create/sign-in", createSignIn);
-router.post("/create/sign-up", createSignUp);
-router.delete("/delete/user", deleteUser);
-router.put("/put/user/:id", putUser);
+router.post("/create/sign-up",[auth], createSignUp);
+router.delete("/delete/user/:id",[auth],  deleteUser);
+router.put("/put/user/:id",[auth], putUser);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const { Users, validateUser } = require("../models/userSchema")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs")
 require("dotenv").config()
 const jwt = require("jsonwebtoken")
 exports.getUsers = async (req, res) => {
@@ -62,7 +62,7 @@ exports.createSignIn = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     try {
-        const deletedUser = await Blogs.findByIdAndDelete(req.params.id);
+        const deletedUser = await Users.findByIdAndDelete(req.params.id);
         if (!deletedUser) {
             return res.status(404).json({ variant: "error", msg: "User not found", innerData: null });
         }
@@ -79,7 +79,7 @@ exports.putUser = async (req, res) => {
             return res.status(400).json({ variant: "warning", msg: error.details[0].message, innerData: null })
         }
         let { id } = req.params
-        let updatedUser = await Blogs.findByIdAndUpdate(id, req.body, { new: true })
+        let updatedUser = await Users.findByIdAndUpdate(id, req.body, { new: true })
         res.status(200).json({ variant: "success", msg: "user is updated", innerData: updatedUser })
     }
     catch {
